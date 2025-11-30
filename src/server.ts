@@ -132,12 +132,44 @@ app.post("/add-toDo", async (req: Request, res: Response) => {
       success: true,
       message: result.rows[0],
     });
-    console.log(result.rows[0]);
+    // console.log(result.rows[0]);
   } catch (error: any) {
     console.log(error?.message);
     res.status(400).json({
       success: false,
       message: "To do add something went wrong",
+    });
+  }
+});
+
+// get single user data
+app.get("/user/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // 1
+
+    if (isNaN(Number(id))) {
+      res.status(400).json({
+        message: "please provide a valide user id",
+      });
+    }
+    const singleUser = await pool.query(`SELECT * FROM users where id = $1`, [
+      id,
+    ]);
+    if (singleUser.rowCount === 0) {
+      res.status(404).json({
+        message: "user not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: singleUser.rows[0],
+    });
+  } catch (error: any) {
+    console.log(error?.message);
+    res.status(400).json({
+      success: false,
+      message: "Not found user",
     });
   }
 });
