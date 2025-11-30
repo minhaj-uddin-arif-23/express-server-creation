@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import path from "path";
 import { Pool } from "pg";
@@ -12,6 +12,12 @@ app.use(express.json()); // Middleware processes requests before routes
 const pool = new Pool({
   connectionString: `${process.env.CONNECTION_URI}`,
 });
+
+// custom middleware
+const logger = (req: Request, res: Response, next: NextFunction) => {
+  console.log("you satify your requirment then you go next iteration");
+  next();
+};
 
 // database a table creation
 const initDB = async () => {
@@ -97,7 +103,7 @@ app.post("/add-user", async (req: Request, res: Response) => {
 });
 
 // get all user
-app.get("/get-all-user", async (req: Request, res: Response) => {
+app.get("/get-all-user", logger, async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`
       SELECT * FROM users ORDER BY CREATED_AT ASC
@@ -373,6 +379,15 @@ app.delete("/user-delete/:id", async (req: Request, res: Response) => {
       message: "something went wrong",
     });
   }
+});
+
+// 404 not found route note -> always write down after compliting all routes
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    path: req.path,
+  });
 });
 
 app.listen(port, () => {
