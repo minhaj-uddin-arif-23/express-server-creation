@@ -233,7 +233,46 @@ app.put("/users/:userId/todos/:todoId", async (req: Request, res: Response) => {
   }
 });
 
+// * delete particular user todo post
+// delete single user data
+app.delete(
+  "/users/:userId/todos/:todoId",
+  async (req: Request, res: Response) => {
+    try {
+      const { userId, todoId } = req.params; // 1
+
+      if (isNaN(Number(userId)) || isNaN(Number(todoId))) {
+        return res.status(400).json({
+          message: "please provide a valide user id",
+        });
+      }
+      const singleUser = await pool.query(
+        `DELETE FROM toDo where id = $1 and user_id=$2`,
+        [todoId, userId]
+      );
+      if (singleUser.rowCount === 0) {
+        res.status(404).json({
+          message: "todo not found",
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        user: singleUser.rowCount,
+        userdata: singleUser.rows[0],
+        message: "Successfully delete Todo",
+      });
+    } catch (error: any) {
+      console.log(error?.message);
+      res.status(400).json({
+        success: false,
+        message: "something went wrong",
+      });
+    }
+  }
+);
 // get single user data
+
 app.get("/user/:id", async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // 1
