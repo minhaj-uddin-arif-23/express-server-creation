@@ -3,15 +3,20 @@ import dotenv from "dotenv";
 import path from "path";
 import { Pool } from "pg";
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 dotenv.config({ path: path.join(process.cwd(), ".env") });
 app.use(express.json()); // Middleware processes requests before routes
+
+// validate db connections
+
 const pool = new Pool({
   connectionString: `${process.env.CONNECTION_URI}`,
 });
+
 // database a table creation
 const initDB = async () => {
-  await pool.query(`
+  try {
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users(
         id SERIAL PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
@@ -19,12 +24,12 @@ const initDB = async () => {
         age INT,
         phone VARCHAR(50),
         address TEXT,
-        CREATED_AT TIMESTAMP DEFAULT NOW(),
-        UPDATED_AT TIMESTAMP DEFAULT NOW()
+        CREATED_AT TIMESTAMP  DEFAULT NOW(),
+        UPDATED_AT TIMESTAMP   DEFAULT NOW()
       )
     `);
 
-  await pool.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS toDo(
         id SERIAL PRIMARY KEY,
         user_id INT REFERENCES users(id) ON DELETE CASCADE,
@@ -32,17 +37,115 @@ const initDB = async () => {
         description VARCHAR(50) NOT NULL,
         completed BOOLEAN DEFAULT FALSE,
         due_date DATE,
-        CREATED_AT TIMESTAMP DEFAULT NOW(),
-        UPDATED_AT TIMESTAMP DEFAULT NOW()
+      CREATED_AT TIMESTAMP  DEFAULT NOW(),
+        UPDATED_AT TIMESTAMP   DEFAULT NOW()
       )`);
+    console.log("Database tables initialize");
+  } catch (error) {
+    console.log("Database initialization failed", error);
+    process.exit(1);
+  }
 };
 
 initDB();
 
-app.get("/", (req: Request, res: Response) => {
-  res.send({ message: "Hello Express Js " });
+// app.get("/", (req: Request, res: Response) => {
+//   res.send({ message: "Hello Express Js " });
+// });
+
+// post a user
+
+app.post("/add-user", async (req: Request, res: Response) => {
+  try {
+    const { name, email, age, phone, address } = req.body;
+    if (!name || !email) {
+      res.status(400).json({
+        message: "name and email required",
+      });
+    }
+    // insert database
+    const insetUser = await pool.query(
+      `
+          INSERT INTO users (name, email, age, phone, address)
+          VALUES($1,$2,$3,$4,$5)
+          RETURNING *
+      `,
+      [name, email, age, phone, address]
+    );
+    if (insetUser.rowCount === 0) {
+      return res.status(409).json({
+        message: "User already exists",
+      });
+    }
+    console.log("insetUser -> ", insetUser.rows[0]);
+    res.status(201).json({
+      success: true,
+      message: insetUser.rows[0],
+    });
+  } catch (error: any) {
+    console.log("somthing went wrong", error);
+    if (error.code === "23505") {
+      res.status(401).json({
+        message: "Duplicate email found",
+      });
+    }
+    res.status(401).json({
+      success: false,
+      message: "user not created successfully",
+    });
+  }
+});
+
+// get all user
+app.get("/get-all-user", async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT * FROM users ORDER BY CREATED_AT DESC
+      `);
+    res.status(400).json({
+      success: true,
+      count: result.rowCount,
+      message: result.rows,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      success: false,
+      message: "fetch all user data",
+    });
+  }
+});
+
+// post a todo
+
+app.post("/add-toDo", async (req: Request, res: Response) => {
+  try {
+    const { user_id, title, description, completed, due_date } = req.body;
+    const result = await pool.query(
+      `
+        INSERT INTO toDo (user_id, title, description, completed,due_date)
+          VALUES($1,$2,$3,$4,$5)
+          RETURNING *`,
+      [user_id, title, description, completed, due_date]
+    );
+    res.status(200).json({
+      success: true,
+      message: result.rows[0],
+    });
+    console.log(result.rows[0]);
+  } catch (error: any) {
+    console.log(error?.message);
+    res.status(400).json({
+      success: false,
+      message: "To do add something went wrong",
+    });
+  }
 });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+function then(arg0: () => void) {
+  throw new Error("Function not implemented.");
+}
