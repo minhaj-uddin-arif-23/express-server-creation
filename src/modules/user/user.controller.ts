@@ -1,24 +1,18 @@
 import { Request, Response } from "express";
 import { pool } from "../../config/db";
+import { UserService } from "./user.service";
 
 // post a user
 const addUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, age, phone, address } = req.body;
+    const { name, email } = req.body;
     if (!name || !email) {
       res.status(400).json({
         message: "name and email required",
       });
     }
-    // insert database
-    const insetUser = await pool.query(
-      `
-          INSERT INTO users (name, email, age, phone, address)
-          VALUES($1,$2,$3,$4,$5)
-          RETURNING *
-      `,
-      [name, email, age, phone, address]
-    );
+    // send buisness logic
+    const insetUser = await UserService.createUser(req.body);
     if (insetUser.rowCount === 0) {
       return res.status(409).json({
         message: "User already exists",
@@ -33,7 +27,8 @@ const addUser = async (req: Request, res: Response) => {
     console.log("somthing went wrong", error);
     if (error.code === "23505") {
       res.status(401).json({
-        message: "Duplicate email found",
+        error: error.detail,
+        message: "Another email Try, this account already exists.",
       });
     }
     res.status(401).json({
@@ -45,9 +40,7 @@ const addUser = async (req: Request, res: Response) => {
 
 const getAllUser = async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(`
-      SELECT * FROM users ORDER BY CREATED_AT ASC
-      `);
+    const result = await UserService.getAllUser();
     res.status(200).json({
       success: true,
       count: result.rowCount,
@@ -72,9 +65,7 @@ const singleuser = async (req: Request, res: Response) => {
         message: "please provide a valide user id",
       });
     }
-    const singleUser = await pool.query(`SELECT * FROM users where id = $1`, [
-      id,
-    ]);
+    const singleUser = await UserService.singleUser(id as string);
     if (singleUser.rowCount === 0) {
       res.status(404).json({
         message: "user not found",
@@ -97,7 +88,6 @@ const singleuser = async (req: Request, res: Response) => {
 // update user data
 const updateUser = async (req: Request, res: Response) => {
   try {
-    const { name, email, age, phone, address } = req.body;
     const { id } = req.params; // 1
 
     if (isNaN(Number(id))) {
@@ -105,9 +95,9 @@ const updateUser = async (req: Request, res: Response) => {
         message: "please provide a valide user id",
       });
     }
-    const singleUserUpdate = await pool.query(
-      `UPDATE users SET name=$1, email=$2, age=$3, phone=$4 ,address=$5 where id=$6 RETURNING*`,
-      [name, email, age, phone, address, id]
+    const singleUserUpdate = await UserService.updateUser(
+      req.body,
+      id as string
     );
     if (singleUserUpdate.rowCount === 0) {
       res.status(404).json({
@@ -140,9 +130,7 @@ const deletUser = async (req: Request, res: Response) => {
         message: "please provide a valide user id",
       });
     }
-    const singleUser = await pool.query(`DELETE FROM users where id = $1`, [
-      id,
-    ]);
+    const singleUser = await UserService.deleteUser(id as string);
     if (singleUser.rowCount === 0) {
       res.status(404).json({
         message: "user not found",
@@ -170,5 +158,5 @@ export const UserController = {
   getAllUser,
   singleuser,
   updateUser,
-  deletUser
+  deletUser,
 };
