@@ -25,11 +25,35 @@ const addTodo = async ({
   return result;
 };
 
-const getAllTodo = async () => {};
+const getAllTodo = async () => {
+  const result = await pool.query(`SELECT * FROM toDo`);
+  return result;
+};
 
-const getSingleTodo = async () => {};
-const updateTodo = async () => {};
-const deleteTodo = async () => {};
+const getSingleTodo = async (id: string) => {
+  const todoResult = await pool.query(`SELECT * FROM toDo where user_id = $1`, [
+    id,
+  ]);
+  return todoResult;
+};
+const updateTodo = async (
+  { user_id, title, description, completed, due_date }: ITodo,
+  userId: string,
+  todoId: string
+) => {
+  const singleUserUpdate = await pool.query(
+    `UPDATE toDo SET title=$1, description=$2 where id=$3 and user_id=$4 RETURNING *`,
+    [title, description, todoId, userId]
+  );
+  return singleUserUpdate;
+};
+const deleteTodo = async (userId: string, todoId: string) => {
+  const singleUser = await pool.query(
+    `DELETE FROM toDo where id = $1 and user_id=$2`,
+    [todoId, userId]
+  );
+  return singleUser;
+};
 
 export const TodoService = {
   addTodo,

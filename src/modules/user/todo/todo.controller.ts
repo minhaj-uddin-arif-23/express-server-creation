@@ -22,7 +22,7 @@ const addTodo = async (req: Request, res: Response) => {
 //  get all todo
 const gettAllTodo = async (req: Request, res: Response) => {
   try {
-    const result = await pool.query(`SELECT * FROM toDo`);
+    const result = await TodoService.getAllTodo();
     res.status(200).json({
       success: true,
       count: result.rowCount,
@@ -49,10 +49,7 @@ const getSingleTodo = async (req: Request, res: Response) => {
         message: "please provide a valide user id",
       });
     }
-    const todoResult = await pool.query(
-      `SELECT * FROM toDo where user_id = $1`,
-      [id]
-    );
+    const todoResult = await TodoService.getSingleTodo(id as string);
     if (todoResult.rowCount === 0) {
       res.status(404).json({
         message: "todo not found",
@@ -85,9 +82,10 @@ const updateTodo = async (req: Request, res: Response) => {
         message: "please provide a valide user id",
       });
     }
-    const singleUserUpdate = await pool.query(
-      `UPDATE toDo SET title=$1, description=$2 where id=$3 and user_id=$4 RETURNING *`,
-      [title, description, todoId, userId]
+    const singleUserUpdate = await TodoService.updateTodo(
+      req.body,
+      userId as string,
+      todoId as string
     );
     if (singleUserUpdate.rowCount === 0) {
       return res.status(404).json({
@@ -121,9 +119,9 @@ const deleteTodo = async (req: Request, res: Response) => {
         message: "please provide a valide user id",
       });
     }
-    const singleUser = await pool.query(
-      `DELETE FROM toDo where id = $1 and user_id=$2`,
-      [todoId, userId]
+    const singleUser = await TodoService.deleteTodo(
+      userId as string,
+      todoId as string
     );
     if (singleUser.rowCount === 0) {
       res.status(404).json({
