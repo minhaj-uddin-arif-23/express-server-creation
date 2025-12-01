@@ -49,7 +49,7 @@ const deleteUser = async (id: string) => {
   const singleUser = await pool.query(`DELETE FROM users where id = $1`, [id]);
   return singleUser;
 };
-
+// export for usercontroller
 export const UserService = {
   createUser,
   getAllUser,

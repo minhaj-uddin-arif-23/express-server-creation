@@ -1,16 +1,11 @@
 import { Request, Response } from "express";
 import { pool } from "../../../config/db";
+import { TodoService } from "./todo.service";
 
 const addTodo = async (req: Request, res: Response) => {
   try {
     const { user_id, title, description, completed, due_date } = req.body;
-    const result = await pool.query(
-      `
-        INSERT INTO toDo (user_id, title, description, completed,due_date)
-          VALUES($1,$2,$3,$4,$5)
-          RETURNING *`,
-      [user_id, title, description, completed, due_date]
-    );
+    const result = await TodoService.addTodo(req.body);
     res.status(200).json({
       success: true,
       message: result.rows[0],
@@ -78,7 +73,7 @@ const getSingleTodo = async (req: Request, res: Response) => {
   }
 };
 
-// update particular  user todo  data 
+// update particular  user todo  data
 
 const updateTodo = async (req: Request, res: Response) => {
   try {
@@ -116,7 +111,7 @@ const updateTodo = async (req: Request, res: Response) => {
 };
 
 //  delete particular user todo post
-// delete single user data 
+// delete single user data
 const deleteTodo = async (req: Request, res: Response) => {
   try {
     const { userId, todoId } = req.params; // 1
