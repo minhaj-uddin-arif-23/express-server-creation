@@ -10,3 +10,14 @@ then authomatic run to server add package.json file this command
 npx tsx watch ./src/server.ts
 
 then npm run ..
+
+
+Request
+  ↓
+Route (URL)
+  ↓
+Controller (HTTP logic)
+  ↓
+Service (Business logic)
+  ↓
+Database
