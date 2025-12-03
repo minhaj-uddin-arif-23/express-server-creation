@@ -1,5 +1,5 @@
 import { pool } from "../../config/db";
-
+import bcrypt from "bcryptjs";
 interface IUser {
   name: string;
   email: string;
@@ -7,15 +7,19 @@ interface IUser {
   phone: string;
   address: string;
 }
-
-const createUser = async ({ name, email, age, phone, address }: IUser) => {
+// { name, email, age, phone, address }: IUser airkm dibo nh karon req.body te aro data
+//  aste pare
+const createUser = async (paload: Record<string, unknown>) => {
+  const { name, email, password } = paload;
+  // password logic here
+  const hashedPassword = await bcrypt.hash(password as string, 10);
   const insetUser = await pool.query(
     `
-            INSERT INTO users (name, email, age, phone, address)
-            VALUES($1,$2,$3,$4,$5)
+            INSERT INTO users (name, email, password )
+            VALUES($1,$2,$3)
             RETURNING *
-        `,
-    [name, email, age, phone, address]
+          `,
+    [name, email, hashedPassword]
   );
   return insetUser;
 };

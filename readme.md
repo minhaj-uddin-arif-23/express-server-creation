@@ -11,13 +11,14 @@ npx tsx watch ./src/server.ts
 
 then npm run ..
 
-
 Request
-  ↓
+↓
 Route (URL)
-  ↓
+↓
 Controller (HTTP logic)
-  ↓
+↓
 Service (Business logic)
-  ↓
+↓
 Database
+
+<!--  when user todo delete , then user also delete -->

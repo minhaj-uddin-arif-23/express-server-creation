@@ -4,7 +4,6 @@ import { TodoService } from "./todo.service";
 
 const addTodo = async (req: Request, res: Response) => {
   try {
-    const { user_id, title, description, completed, due_date } = req.body;
     const result = await TodoService.addTodo(req.body);
     res.status(200).json({
       success: true,
@@ -74,7 +73,6 @@ const getSingleTodo = async (req: Request, res: Response) => {
 
 const updateTodo = async (req: Request, res: Response) => {
   try {
-    const { title, description } = req.body;
     const { userId, todoId } = req.params; // 1
 
     if (isNaN(Number(userId)) || isNaN(Number(todoId))) {

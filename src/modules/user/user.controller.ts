@@ -5,10 +5,10 @@ import { UserService } from "./user.service";
 // post a user
 const addUser = async (req: Request, res: Response) => {
   try {
-    const { name, email } = req.body;
-    if (!name || !email) {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
       res.status(400).json({
-        message: "name and email required",
+        message: "name email and password required",
       });
     }
     // send buisness logic

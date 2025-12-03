@@ -8,13 +8,10 @@ interface ITodo {
   due_date: Date;
 }
 
-const addTodo = async ({
-  user_id,
-  title,
-  description,
-  completed,
-  due_date,
-}: ITodo) => {
+// Record<string,unknown> = {key,value}
+// {user_id, title, description, completed, due_date} : ITodo
+const addTodo = async (paload: Record<string, unknown>) => {
+  const { user_id, title, description, completed, due_date } = paload;
   const result = await pool.query(
     `
           INSERT INTO toDo (user_id, title, description, completed,due_date)
