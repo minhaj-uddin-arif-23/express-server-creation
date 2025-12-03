@@ -10,22 +10,30 @@ then finaly jwt concept why because one single time user login then access more 
 import { pool } from "../../config/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import config from "../../config/env";
 const loginUser = async (email: string, password: string) => {
-  console.log({ email, password });
+  // console.log({ email, password });
+  if (!email || !password) {
+    throw new Error("Please provide valid email and password");
+  }
   const result = await pool.query(`SELECT * FROM users WHERE email=$1`, [
     email,
   ]);
-  if (result.rows.length === 0) return "please register first";
+  // if (result.rows.length === 0) return "please register first";
   const user = result.rows[0]; //
   console.log({ user: user });
   const checkPassword = bcrypt.compare(password as string, user.password);
   if (!checkPassword) return "password doesn't match ";
   // generate secret token
-  const secret_key =
-    "G4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV";
-  const token = jwt.sign({ email: email, password: password }, secret_key, {
-    expiresIn: "7d",
-  });
+  const secret_key = config.jwt_secret;
+
+  const token = jwt.sign(
+    { email: email, password: password },
+    secret_key as string,
+    {
+      expiresIn: "7d",
+    }
+  );
   console.log(token);
   return { token, user };
 };
