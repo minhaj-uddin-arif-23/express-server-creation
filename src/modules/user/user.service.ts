@@ -10,23 +10,23 @@ interface IUser {
 // { name, email, age, phone, address }: IUser airkm dibo nh karon req.body te aro data
 //  aste pare
 const createUser = async (paload: Record<string, unknown>) => {
-  const { name, email, password } = paload;
+  const { name, email, role, password } = paload;
   // password logic here
   const hashedPassword = await bcrypt.hash(password as string, 10);
   const insetUser = await pool.query(
     `
-            INSERT INTO users (name, email, password )
-            VALUES($1,$2,$3)
+            INSERT INTO users (name, email,role, password )
+            VALUES($1,$2,$3,$4)
             RETURNING *
           `,
-    [name, email, hashedPassword]
+    [name, email, role, hashedPassword]
   );
   return insetUser;
 };
 
 const getAllUser = async () => {
   const result = await pool.query(`
-      SELECT * FROM users ORDER BY CREATED_AT ASC
+      SELECT name,email,role FROM users ORDER BY CREATED_AT ASC
       `);
   return result;
 };
